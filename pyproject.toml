@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "back"
+version = "0.1.0"
+description = "Backend for unitrip.ru"
+authors = ["blue undefined <tisakov2512@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+uvicorn = "^0.20.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
