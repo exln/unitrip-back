@@ -1,11 +1,26 @@
-FROM python:3
-ENV PYTHONUNBUFFERED=1
-# RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev
-ENV PYTHONUNBUFFERED=1
+FROM tiangolo/uvicorn-gunicorn-fastapi:latest
+
 WORKDIR /back/
-COPY requirements.txt requirements.txt
-RUN pip3 install --upgrade pip
-RUN pip3 install -r requirements.txt
+
+RUN apt-get update && apt-get install -y libgl1-mesa-dev
+
+ENV POETRY_HOME="/opt/poetry" \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VERSION=1.2.0 \
+    POETRY_VIRTUALENVS_CREATE=false
+
+# Install Poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+ENV PATH="$PATH:$POETRY_HOME/bin"
+
+# Copy poetry.lock* in case it doesn't exist in the repo
+COPY pyproject.toml poetry.lock* /back/
+
+# Allow installing dev dependencies to run tests
+ARG INSTALL_DEV=false
+RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then poetry install --no-root ; else poetry install --no-root --no-dev ; fi"
+
 COPY . /back/
-EXPOSE 7878
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7878"]
+
+CMD ["bash", "./entrypoint.sh"]

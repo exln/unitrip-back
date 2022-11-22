@@ -1,19 +1,39 @@
-version: "3.8"
+version: "3.9"
 
 services:
+  swagger:
+    image: swaggerapi/swagger-ui:latest
+    ports:
+      - 80:8080
+    environment:
+      URL: "swagger.yml"
+    volumes:
+      - ./swagger/swagger.yml:/usr/share/nginx/html/swagger.yml
+    labels:
+      swaggerLabel: UNITRIP backend
+      swaggerGroup: UNITRIP
+      swaggerPort: 8081
+
   database:
-    container_name: postgresql_db
-    image: postgres
-    restart: always
+    image: postgres:latest
+    volumes:
+      - unitrip-db-data:/var/lib/postgresql/data/
     ports:
       - 5432:5432
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - default
 
   pgadmin:
-    container_name: pgadmin56
     image: dpage/pgadmin4
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
@@ -21,16 +41,23 @@ services:
     ports:
       - 5050:80
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+    restart: always
 
   backend:
-    container_name: app
     build: .
-    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 7878 --reload"
+    command: bash -c "alembic upgrade head"
+    depends_on:
+      database:
+        condition: service_healthy
     volumes:
       - .:/app
     ports:
-      - 7878:7878
-    depends_on:
-      - database
+      - ${BACKEND_PORT}:${BACKEND_PORT}
     restart: always
+    networks:
+      - default
+
+volumes:
+  unitrip-db-data:
