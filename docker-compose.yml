@@ -1,39 +1,35 @@
 version: "3.9"
-
 services:
-  swagger:
-    image: swaggerapi/swagger-ui:latest
-    ports:
-      - 80:8080
-    environment:
-      URL: "swagger.yml"
-    volumes:
-      - ./swagger/swagger.yml:/usr/share/nginx/html/swagger.yml
-    labels:
-      swaggerLabel: UNITRIP backend
-      swaggerGroup: UNITRIP
-      swaggerPort: 8081
+  # swagger:
+  #   image: swaggerapi/swagger-ui:latest
+  #   ports:
+  #     - "80:8080"
+  #   environment:
+  #     URL: "swagger.yml"
+  #   volumes:
+  #     - ./swagger/swagger.yml:/usr/share/nginx/html/swagger.yml
+  #   labels:
+  #     swaggerLabel: LCT Hack Backend
+  #     swaggerGroup: lst-hack
+  #     swaggerPort: 8081
 
-  database:
+  db:
     image: postgres:latest
     volumes:
-      - unitrip-db-data:/var/lib/postgresql/data/
-    ports:
-      - 5432:5432
+      - lct-hack-db-data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
-    restart: always
-    networks:
-      - default
 
   pgadmin:
+    container_name: pgadmin56
     image: dpage/pgadmin4
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
@@ -41,23 +37,60 @@ services:
     ports:
       - 5050:80
     depends_on:
-      database:
+      db:
         condition: service_healthy
-    restart: always
 
   backend:
     build: .
-    command: bash -c "alembic upgrade head"
     depends_on:
-      database:
+      db:
         condition: service_healthy
     volumes:
       - .:/app
     ports:
       - ${BACKEND_PORT}:${BACKEND_PORT}
-    restart: always
+    environment:
+      BACKEND_DEBUG: ${BACKEND_DEBUG}
+
+      BACKEND_TITLE: ${BACKEND_TITLE}
+      BACKEND_DESCRIPTION: ${BACKEND_DESCRIPTION}
+      BACKEND_PREFIX: ${BACKEND_PREFIX}
+
+      BACKEND_HOST: ${BACKEND_HOST}
+      BACKEND_PORT: ${BACKEND_PORT}
+      BACKEND_RELOAD: ${BACKEND_RELOAD}
+
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS}
+
+      BACKEND_JWT_SECRET: ${BACKEND_JWT_SECRET}
+      BACKEND_JWT_ALGORITHM: ${BACKEND_JWT_ALGORITHM}
+
+      BACKEND_JWT_PRIVATE_KEY: ${BACKEND_JWT_PRIVATE_KEY}
+      BACKEND_JWT_PUBLIC_KEY: ${BACKEND_JWT_PUBLIC_KEY}
+      BACKEND_JWT_ACCESS_TOKEN_EXPIRE_MINUTES: ${BACKEND_JWT_ACCESS_TOKEN_EXPIRE_MINUTES}
+      BACKEND_JWT_REFRESH_TOKEN_EXPIRE_MINUTES: ${BACKEND_JWT_REFRESH_TOKEN_EXPIRE_MINUTES}
+
+      BACKEND_DATA_TOKEN: ${BACKEND_DATA_TOKEN}
+
+      BACKEND_DISABLE_AUTH: ${BACKEND_DISABLE_AUTH}
+      BACKEND_DISABLE_FILE_SENDING: ${BACKEND_DISABLE_FILE_SENDING}
+
+      STORAGE_REGION: ${STORAGE_REGION}
+      STORAGE_ENDPOINT: ${STORAGE_ENDPOINT}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+      STORAGE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY_ID}
+      STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
+      STORAGE_FOLDER_NAME: ${STORAGE_FOLDER_NAME}
+
+      POSTGRES_HOSTNAME: ${POSTGRES_HOSTNAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+
+      ENV: development
     networks:
       - default
 
 volumes:
-  unitrip-db-data:
+  lct-hack-db-data:

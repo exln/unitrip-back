@@ -68,6 +68,7 @@ class Config(_Settings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+    POSTGRES_PORT: str
 
     # PGAdmin
     PGADMIN_EMAIL: str
@@ -75,18 +76,19 @@ class Config(_Settings):
 
     VERIFICATION_SECRET: str
 
-    SQLALCHEMY_DATABASE_URI: Optional[AsyncPostgresDsn] = None
+    SQLALCHEMY_DATABASE_URL: Optional[AsyncPostgresDsn] = None
 
-    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
+    @validator("SQLALCHEMY_DATABASE_URL", pre=True)
     def assemble_async_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         if isinstance(v, str):
             return v
         return AsyncPostgresDsn.build(
-            scheme="postgresql+asyncpg",
-            user=values.get("POSTGRES_USER"),
-            password=values.get("POSTGRES_PASSWORD"),
-            host=values.get("POSTGRES_HOSTNAME"),
-            path=f"/{values.get('POSTGRES_DB') or ''}",
+            scheme='postgresql+asyncpg',
+            user=values.get('POSTGRES_USER'),
+            password=values.get('POSTGRES_PASSWORD'),
+            host=values.get('POSTGRES_HOSTNAME'),
+            port=values.get('POSTGRES_PORT'),
+            path=f"/{values.get('POSTGRES_DB') or ''}"
         )
 
 

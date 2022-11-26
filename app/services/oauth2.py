@@ -14,8 +14,8 @@ class JWTSettings(BaseModel):
     authjwt_algorithm: str = config.BACKEND_JWT_ALGORITHM
     authjwt_decode_algorithms: List[str] = [config.BACKEND_JWT_ALGORITHM]
     authjwt_token_location: set = {'cookies', 'headers'}
-    authjwt_access_cookie_key: str = 'access_token'
-    authjwt_refresh_cookie_key: str = 'refresh_token'
+    authjwt_access_cookie_key: str = 'accessToken'
+    authjwt_refresh_cookie_key: str = 'refreshToken'
     # authjwt_cookie_csrf_protect: bool = False
     authjwt_public_key: str = base64.b64decode(
         config.BACKEND_JWT_PUBLIC_KEY).decode('utf-8')

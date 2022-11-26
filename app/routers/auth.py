@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from app.config import config
-from app.models import UserCreate, UserAuth, Token
+from app.models import UserCreate, UserAuth, Token, UserInfoWithTokens
 from app.database import get_session
-from app.services import AuthService
+from app.services.RouterServices import AuthService
+from app.services.oauth2 import AuthJWT
+
 
 router = APIRouter(prefix=config.BACKEND_PREFIX)
 
@@ -15,28 +17,28 @@ REFRESH_TOKEN_EXPIRES_IN = config.BACKEND_JWT_REFRESH_TOKEN_EXPIRE_MINUTES
 
 @router.post(
     "/register",
-    response_model=Token,
+    response_model=UserInfoWithTokens,
     response_description="Успешный возврат токена авторизации",
     status_code=status.HTTP_200_OK,
     description="Зарегистирироваться в сервисе и получить токен",
     summary="Регистрация в сервисе",
     # responses={},
 )
-async def register(model: UserCreate, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends()):
-    return await auth_service.register(db=db, model=model)
+async def register(model: UserCreate, response: Response, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends(), Authorize: AuthJWT = Depends()):
+    return await auth_service.register(db=db, model=model,Authorize=Authorize, response=response)
 
 
 @router.post(
     "/login",
-    response_model=Token,
+    response_model=UserInfoWithTokens,
     response_description="Успешный возврат токена авторизации",
     status_code=status.HTTP_200_OK,
     description="Войти в сервис и получить токен",
     summary="Вход в сервис",
     # responses={},
 )
-async def login(model: UserAuth, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends()):
-    return await auth_service.login(db=db, model=model)
+async def login(model: UserAuth, response: Response, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends(), Authorize: AuthJWT = Depends()):
+    return await auth_service.login(db=db, model=model, Authorize=Authorize, response=response)
 
 
 @router.get(
@@ -48,8 +50,8 @@ async def login(model: UserAuth, db: AsyncSession = Depends(get_session), auth_s
     summary="Обновления токена доступа",
     # responses={},
 )
-async def refresh(model: UserAuth, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends()):
-    return await auth_service.refresh(db=db, model=model)
+async def refresh(response: Response, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends(), Authorize: AuthJWT = Depends()):
+    return await auth_service.refresh(db=db, response=response, Authorize=Authorize)
     
 
 @router.get(
@@ -61,6 +63,6 @@ async def refresh(model: UserAuth, db: AsyncSession = Depends(get_session), auth
     summary="Выход",
     # responses={},
 )
-async def refresh(auth_service: AuthService = Depends()):
+async def logout(auth_service: AuthService = Depends()):
     return await auth_service.logout()
 

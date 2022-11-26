@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 from sqlalchemy.sql.expression import cast
 
 from app.database.tables import User
-from app.models import UserCreate, UserPatch
+from app.models import UserCreate, UserPatch, UserEmail
 
 
 class UsersRepository:
@@ -42,7 +42,7 @@ class UsersRepository:
         if user is None:
             raise HTTPException(404, "Пользователь не найден")
 
-        from app.services.auth import crypt_password
+        from app.services.RouterServices.auth import crypt_password
 
         model.password = crypt_password(model.password)
 

@@ -18,18 +18,19 @@ app = FastAPI(
     openapi_url=f"{config.BACKEND_PREFIX}/openapi.json",
     title=config.BACKEND_TITLE,
     description=config.BACKEND_DESCRIPTION,
+    docs_url='/api/docs'
 )
 
-app.middleware("http")(catch_unhandled_exceptions)
-add_exception_handlers(app)
+# app.middleware("http")(catch_unhandled_exceptions)
+# add_exception_handlers(app)
 
-backend_origins = [
-    config.BACKEND_CORS_ORIGINS,
-]
+# backend_origins = [
+#     config.BACKEND_CORS_ORIGINS,
+# ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=backend_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

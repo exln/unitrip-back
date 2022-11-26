@@ -9,6 +9,11 @@ format:
 connect:
 	docker-compose exec backend bash
 
+.PHONY: logs
+logs:
+	docker logs --follow backend-backend-1
+
+
 .PHONY: clear
 clear:
 	docker-compose down
@@ -16,3 +21,4 @@ clear:
 	docker-compose up -d --build
 
 .DEFAULT_GOAL :=
+

@@ -124,6 +124,7 @@ celerybeat.pid
 .env
 .venv
 env/
+venv
 venv/
 ENV/
 env.bak/
@@ -161,5 +162,8 @@ cython_debug/
 .idea/
 .vscode/
 gen/
+virtualenv/
+tests/
 
-/alembic/versions/*.py
+/migrations/versions/*.py
+requirements.txt

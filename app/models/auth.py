@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr
-
+from pydantic import BaseModel, EmailStr, Field
+from typing import Tuple
 
 class UserAuth(BaseModel):
     email: EmailStr
@@ -7,5 +7,21 @@ class UserAuth(BaseModel):
 
 
 class Token(BaseModel):
-    access_token: str
-    refresh_token: str
+    accessToken: str
+    refreshToken: str
+
+class UserInfo(BaseModel):
+    _id: str
+    email = EmailStr
+    firstName = str
+    lastName = str
+
+
+class UserInfoWithTokens(BaseModel):
+    user: dict
+    accessToken: str
+    refreshToken: str
+
+
+class UserEmail(BaseModel):
+    email: EmailStr = Field(description="Email адрес пользователя")

@@ -25,4 +25,6 @@ archive.zip
 db.sqlite3
 .gitignore
 
-/alembic/versions/*.py
+/migrations/versions/*.py
+/virtualenv
+requirements.txt
