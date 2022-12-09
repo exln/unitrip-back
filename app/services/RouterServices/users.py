@@ -37,7 +37,7 @@ class UsersService:
         user = await UsersRepository.get_user_by_email(db, email.email)
         if user is None:
             return UserGetByEmail(isUser=False, email=email.email)
-        return UserGetByEmail(isUser=True, email=user.email, firstName=user.firstName)
+        return UserGetByEmail(isUser=True, email=user.email, first_name=user.first_name)
 
     @staticmethod
     async def update(db: AsyncSession, guid: UUID4, model: UserCreate) -> UserGet:

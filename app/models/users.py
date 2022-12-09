@@ -8,8 +8,8 @@ from app.models.utilities import optional
 
 class UserBase(BaseModel):
     email: EmailStr = Field(description="Email адрес пользователя")
-    firstName: str = Field(description="Имя пользователя", min_length=2)
-    lastName: str = Field(description="Фамилия пользователя", min_length=2)
+    first_name: str = Field(description="Имя пользователя", min_length=2)
+    last_name: str = Field(description="Фамилия пользователя", min_length=2)
 
     class Config:
         orm_mode = True
@@ -17,6 +17,24 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(description="Пароль пользователя", min_length=8)
+
+class UserMetaCreate(BaseModel):
+    # userGuid: UUID4 = Field(description="Уникальный идентификатор пользователя")
+    # isEmailConfirmed: bool = Field(description="Подтвержден ли email пользователя")
+    # isPhoneConfirmed: bool = Field(description="Подтвержден ли телефон пользователя")
+    # isTwoFactorEnabled: bool = Field(description="Включен ли двухфакторный вход пользователя")
+    # isUserBlocked: bool = Field(description="Заблокирован ли пользователь")
+    # isUserDeleted: bool = Field(description="Удален ли пользователь")
+    # isUserEmailSubscribed: bool = Field(description="Подписан ли пользователь на рассылку")
+    # isUserPhoneSubscribed: bool = Field(description="Подписан ли пользователь на рассылку по телефону")
+    user_guid: UUID4 = Field(description="Уникальный идентификатор пользователя")
+    nickname: str = Field(description="Никнейм пользователя", min_length=5, max_length=20, default=None)
+    pfp_full_url: str = Field(description="Полный URL аватарки пользователя")
+    pfp_thumb_url: str = Field(description="Полный URL миниатюры аватарки пользователя")
+    
+    
+    class Config:
+        orm_mode = True
 
 
 class UserGet(UserBase):
@@ -34,7 +52,7 @@ class UserGet(UserBase):
 class UserGetByEmail(BaseModel):
     isUser: bool = Field(description="Наличие пользователя в базе")
     email: Optional[EmailStr] = Field(description="Email адрес пользователя")
-    firstName: Optional[str] = Field(description="Имя пользователя", min_length=2)
+    first_name: Optional[str] = Field(description="Имя пользователя", min_length=2)
 
     class Config:
         orm_mode = True

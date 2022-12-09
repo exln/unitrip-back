@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from app.config import config
-from app.models import UserCreate, UserAuth, Token, UserInfoWithTokens
+from app.models import UserCreate, UserAuth, Token, UserInfoWithTokens, RefreshToken
 from app.database import get_session
 from app.services.RouterServices import AuthService
 from app.services.oauth2 import AuthJWT
@@ -41,7 +41,7 @@ async def login(model: UserAuth, response: Response, db: AsyncSession = Depends(
     return await auth_service.login(db=db, model=model, Authorize=Authorize, response=response)
 
 
-@router.get(
+@router.post(
     "/refresh",
     response_model=Token,
     response_description="Успешный возврат нового токена авторизации",
@@ -50,8 +50,8 @@ async def login(model: UserAuth, response: Response, db: AsyncSession = Depends(
     summary="Обновления токена доступа",
     # responses={},
 )
-async def refresh(response: Response, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends(), Authorize: AuthJWT = Depends()):
-    return await auth_service.refresh(db=db, response=response, Authorize=Authorize)
+async def refresh(model: RefreshToken, response: Response, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends(), Authorize: AuthJWT = Depends()):
+    return await auth_service.refresh(model=model.refreshToken, db=db, response=response, Authorize=Authorize)
     
 
 @router.get(

@@ -1,21 +1,21 @@
 from __future__ import annotations
-
+import datetime
 from datetime import timedelta
-
+import time
 from fastapi import Depends, HTTPException, Response, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import jwt
-from jose.exceptions import JOSEError
+import jwt
+import base64
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 from app.config import config
-from app.models import Token, UserAuth, UserCreate, UserGet, UserInfoWithTokens
+from app.models import Token, UserAuth, UserCreate, UserGet, UserInfoWithTokens, RefreshToken, UserMetaCreate
 from app.repositories import UsersRepository
 
 from ..hash_utils import verify_password, hash_password
-from ..oauth2 import AuthJWT
+from ..oauth2 import AuthJWT, JWTSettings
 
 ACCESS_TOKEN_EXPIRES_IN = config.BACKEND_JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRES_IN = config.BACKEND_JWT_REFRESH_TOKEN_EXPIRE_MINUTES
@@ -38,19 +38,19 @@ def verify_token(access_token: HTTPAuthorizationCredentials = Depends(bearer_sch
 class AuthService:
     async def login(self, db: AsyncSession, model: UserAuth, response: Response, Authorize: AuthJWT = Depends()) -> UserInfoWithTokens:
         user = await UsersRepository.get_user_by_email(db=db, email=model.email)
-
+        
         if not user:
             raise HTTPException(401, "Неверный логин или пароль")
 
         if not verify_password(model.password, user.password):
             raise HTTPException(401, "Неверный логин или пароль")
-
+        user_meta = await UsersRepository.get_user_meta(db=db, user_guid=user.guid)
         access_token = Authorize.create_access_token(subject=str(
             user.guid), fresh=True, expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRES_IN))
         refresh_token = Authorize.create_refresh_token(subject=str(
             user.guid), expires_time=timedelta(minutes=REFRESH_TOKEN_EXPIRES_IN))
 
-        return UserInfoWithTokens(user = {'_id':user._id, 'email': user.email, 'firstName': user.firstName, 'lastName': user.lastName}, accessToken=access_token, refreshToken=refresh_token)
+        return UserInfoWithTokens(user = {'_id': user_meta.user_id, 'email': user.email, 'first_name': user.first_name, 'last_name': user.last_name}, accessToken=access_token, refreshToken=refresh_token)
 
     async def register(self, db: AsyncSession, model: UserCreate, response: Response, Authorize: AuthJWT = Depends()) -> UserInfoWithTokens:
         if config.BACKEND_DISABLE_REGISTRATION:
@@ -63,8 +63,9 @@ class AuthService:
         hashed_password = hash_password(model.password)
         model.password = hashed_password
         model.email = EmailStr(model.email.lower())
-
+    
         user = await UsersRepository.create(db, model)
+        user_meta = await UsersRepository.create_user_meta(db, guid = user.guid)
 
         access_token = Authorize.create_access_token(subject=str(
             user.guid), fresh=True, expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRES_IN))
@@ -72,28 +73,33 @@ class AuthService:
         refresh_token = Authorize.create_refresh_token(subject=str(
             user.guid), expires_time=timedelta(minutes=REFRESH_TOKEN_EXPIRES_IN))
 
-        return UserInfoWithTokens(_id=user._id, email=user.email, firstName=user.firstName, lastName=user.lastName, accessToken=access_token, refreshToken=refresh_token)
+        return UserInfoWithTokens(user = {'_id': user_meta.user_id, 'email': user.email, 'first_name': user.first_name, 'last_name': user.last_name}, accessToken=access_token, refreshToken=refresh_token)
 
-    async def refresh(self, db: AsyncSession, response: Response, Authorize) -> Token:
+    async def refresh(self, model: str, db: AsyncSession, response: Response, Authorize) -> Token:
+        try:
+            decoded = jwt.decode(model, base64.b64decode(config.BACKEND_JWT_PUBLIC_KEY).decode('utf-8'), algorithms=['RS256'])
+            now = datetime.datetime.now().timestamp()
+            if decoded['exp'] < now:
+                raise HTTPException(401, detail=' Время действия токена истекло')
 
-        Authorize.jwt_refresh_token_required()
-        user_guid = Authorize.get_jwt_subject()
+            user_guid = decoded['sub']
 
-        if not user_guid:
-            raise HTTPException(401, detail='Неверный токен')
+            if not user_guid:
+                raise HTTPException(401, detail='Неверный токен')
 
-        user = await UsersRepository.get(db=db, guid=user_guid)
+            user = await UsersRepository.get(db=db, guid=user_guid)
 
-        if not user:
-            raise HTTPException(401, detail='Неверный токен')
+            if not user:
+                raise HTTPException(401, detail='Неверный токен')
 
-        access_token = Authorize.create_access_token(subject=str(
-            user.guid), fresh=False, expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRES_IN))
+            access_token = Authorize.create_access_token(subject=str(
+                user.guid), fresh=False, expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRES_IN))
 
-        refresh_token = Authorize.create_refresh_token(subject=str(
-            user.guid), expires_time=timedelta(minutes=REFRESH_TOKEN_EXPIRES_IN))
-
-        return Token(accessToken=access_token, refreshToken=refresh_token)
+            refresh_token = Authorize.create_refresh_token(subject=str(
+                user.guid), expires_time=timedelta(minutes=REFRESH_TOKEN_EXPIRES_IN))
+            return Token(accessToken=access_token, refreshToken=refresh_token)
+        except Exception as e:
+            raise HTTPException(401, detail='Неверный токен') from e
 
     async def logout(self, Authorize: AuthJWT = Depends()) -> Token:
         

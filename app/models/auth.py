@@ -10,15 +10,23 @@ class Token(BaseModel):
     accessToken: str
     refreshToken: str
 
+class RefreshToken(BaseModel):
+    refreshToken: str
+
 class UserInfo(BaseModel):
     _id: str
     email = EmailStr
-    firstName = str
-    lastName = str
+    first_name = str
+    last_name = str
 
 
 class UserInfoWithTokens(BaseModel):
-    user: dict
+    user: dict = {
+        '_id': int,
+        'email': EmailStr,
+        'first_name': str,
+        'last_name': str
+    }
     accessToken: str
     refreshToken: str
 

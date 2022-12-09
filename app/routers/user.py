@@ -82,11 +82,11 @@ async def get_all(
     # responses={},
 )
 async def get(
-    email: UserEmail,
+    model: UserEmail,
     db: AsyncSession = Depends(get_session),
     users_service: UsersService = Depends(),
 ):
-    return await users_service.get_user_by_email(db=db, email=email)
+    return await users_service.get_user_by_email(db=db, email=model)
 
 
 # @router.put(

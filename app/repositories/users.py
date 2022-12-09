@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import cast
 
-from app.database.tables import User
-from app.models import UserCreate, UserPatch, UserEmail
+from app.database.tables import User, UserMeta
+from app.models import UserCreate, UserPatch, UserEmail, UserMetaCreate
 
 
 class UsersRepository:
@@ -19,6 +19,14 @@ class UsersRepository:
         await db.commit()
         await db.refresh(user)
         return user
+
+    @staticmethod
+    async def create_user_meta(db: AsyncSession, guid: UUID4) -> UserMeta:
+        user_meta = UserMeta(user_guid=guid)
+        db.add(user_meta)
+        await db.commit()
+        await db.refresh(user_meta)
+        return user_meta
 
     @staticmethod
     async def get_all(db: AsyncSession, offset: int = 0, limit: int = 100) -> List[User]:
@@ -33,6 +41,11 @@ class UsersRepository:
     @staticmethod
     async def get_user_by_email(db: AsyncSession, email: EmailStr) -> User:
         res = await db.execute(select(User).where(User.email == email).limit(1))
+        return res.scalar()
+    
+    @staticmethod
+    async def get_user_meta(db: AsyncSession, user_guid: UUID4) -> UserMeta:
+        res = await db.execute(select(UserMeta).where(UserMeta.user_guid == user_guid).limit(1))
         return res.scalar()
 
     @staticmethod
