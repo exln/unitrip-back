@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 from pydantic import BaseModel, EmailStr, Field
-from typing import Tuple
+from typing import Tuple, Dict, Union
+
 
 class UserAuth(BaseModel):
     email: EmailStr
@@ -19,16 +21,16 @@ class UserInfo(BaseModel):
     first_name = str
     last_name = str
 
+class UserModel(BaseModel):
+    _id: int = Field(description="Идентификатор пользователя")
+    email: EmailStr = Field(description="Email адрес пользователя")
+    first_name: str = Field(description="Имя пользователя")
+    last_name: str = Field(description="Фамилия пользователя")
 
 class UserInfoWithTokens(BaseModel):
-    user: dict = {
-        '_id': int,
-        'email': EmailStr,
-        'first_name': str,
-        'last_name': str
-    }
-    accessToken: str
-    refreshToken: str
+    user: UserModel = Field(description="Информация о пользователе")
+    accessToken: str = Field(description="JWT access-токен")
+    refreshToken: str = Field(description="JWT refresh-токен")
 
 
 class UserEmail(BaseModel):

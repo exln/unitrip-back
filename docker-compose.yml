@@ -14,6 +14,7 @@ services:
   #     swaggerPort: 8081
 
   db:
+    container_name: unitrip-db
     image: postgres:latest
     volumes:
       - lct-hack-db-data:/var/lib/postgresql/data/
@@ -41,6 +42,7 @@ services:
         condition: service_healthy
 
   backend:
+    container_name: unitrip-backend
     build: .
     depends_on:
       db:

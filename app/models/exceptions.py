@@ -19,11 +19,10 @@ async def catch_unhandled_exceptions(request: Request, call_next):
             "message": get_endpoint_message(request),
             "errors": [Message(message="Отказано в обработке из-за неизвестной ошибки на сервере")],
         }
-        if not config.BACKEND_DEBUG:
-            logger.info(traceback.format_exc())
-            return JSONResponse(status_code=500, content=jsonable_encoder(error))
-        else:
+        if config.BACKEND_DEBUG:
             raise
+        logger.info(traceback.format_exc())
+        return JSONResponse(status_code=500, content=jsonable_encoder(error))
 
 
 class Message(BaseModel):

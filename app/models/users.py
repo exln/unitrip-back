@@ -5,6 +5,7 @@ from pydantic import UUID4, BaseModel, EmailStr, Field
 
 from app.models.utilities import optional
 
+print("users.py loaded")
 
 class UserBase(BaseModel):
     email: EmailStr = Field(description="Email адрес пользователя")
@@ -42,8 +43,7 @@ class UserGet(UserBase):
     _id: str = Field(description="ID пользователя")
     password: str = Field(description="Пароль пользователя")
     createdAt: datetime = Field(description="Время создания пользователя")
-    updatedAt: datetime = Field(
-        description="Время последнего обновления пользователя")
+    updatedAt: datetime = Field(description="Время последнего обновления пользователя")
 
     class Config:
         orm_mode = True

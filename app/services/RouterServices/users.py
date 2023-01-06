@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import UserCreate, UserGet, UserPatch, UserGetByEmail, UserEmail
 from app.repositories import UsersRepository
 
+print("router users.py loaded")
 
 class UsersService:
     @staticmethod

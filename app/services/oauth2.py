@@ -46,10 +46,16 @@ def require_user(db: AsyncSession, Authorize: AuthJWT = Depends()):
         print(error)
         if error == 'MissingTokenError':
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Вход не выполнен")
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Вход не выполнен",
+            ) from e
         if error == 'UserNotFound':
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Пользователь не найден")
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Пользователь не найден",
+            ) from e
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный токен авторизации")
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверный токен авторизации",
+        ) from e
     return user_guid

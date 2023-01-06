@@ -8,12 +8,10 @@ from app.database import get_session
 from app.services.RouterServices import AuthService
 from app.services.oauth2 import AuthJWT
 
-
 router = APIRouter(prefix=config.BACKEND_PREFIX)
 
 ACCESS_TOKEN_EXPIRES_IN = config.BACKEND_JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRES_IN = config.BACKEND_JWT_REFRESH_TOKEN_EXPIRE_MINUTES
-
 
 @router.post(
     "/register",
@@ -24,7 +22,13 @@ REFRESH_TOKEN_EXPIRES_IN = config.BACKEND_JWT_REFRESH_TOKEN_EXPIRE_MINUTES
     summary="Регистрация в сервисе",
     # responses={},
 )
-async def register(model: UserCreate, response: Response, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends(), Authorize: AuthJWT = Depends()):
+async def register(
+    model: UserCreate,
+    response: Response,
+    db: AsyncSession = Depends(get_session),
+    auth_service: AuthService = Depends(),
+    Authorize: AuthJWT = Depends()
+    ):
     return await auth_service.register(db=db, model=model,Authorize=Authorize, response=response)
 
 
@@ -37,8 +41,13 @@ async def register(model: UserCreate, response: Response, db: AsyncSession = Dep
     summary="Вход в сервис",
     # responses={},
 )
-async def login(model: UserAuth, response: Response, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends(), Authorize: AuthJWT = Depends()):
-    return await auth_service.login(db=db, model=model, Authorize=Authorize, response=response)
+async def login(
+    model: UserAuth,
+    db: AsyncSession = Depends(get_session),
+    auth_service: AuthService = Depends(),
+    Authorize: AuthJWT = Depends()
+    ):
+    return await auth_service.login(db=db, model=model, Authorize=Authorize)
 
 
 @router.post(
@@ -50,8 +59,13 @@ async def login(model: UserAuth, response: Response, db: AsyncSession = Depends(
     summary="Обновления токена доступа",
     # responses={},
 )
-async def refresh(model: RefreshToken, response: Response, db: AsyncSession = Depends(get_session), auth_service: AuthService = Depends(), Authorize: AuthJWT = Depends()):
-    return await auth_service.refresh(model=model.refreshToken, db=db, response=response, Authorize=Authorize)
+async def refresh(
+    model: RefreshToken,
+    db: AsyncSession = Depends(get_session),
+    auth_service: AuthService = Depends(),
+    Authorize: AuthJWT = Depends()
+    ):
+    return await auth_service.refresh(model=model.refreshToken, db=db, Authorize=Authorize)
     
 
 @router.get(
@@ -63,6 +77,8 @@ async def refresh(model: RefreshToken, response: Response, db: AsyncSession = De
     summary="Выход",
     # responses={},
 )
-async def logout(auth_service: AuthService = Depends()):
+async def logout(
+    auth_service: AuthService = Depends()
+    ):
     return await auth_service.logout()
 

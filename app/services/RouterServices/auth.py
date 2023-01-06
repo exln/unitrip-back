@@ -36,7 +36,7 @@ def verify_token(access_token: HTTPAuthorizationCredentials = Depends(bearer_sch
 
 
 class AuthService:
-    async def login(self, db: AsyncSession, model: UserAuth, response: Response, Authorize: AuthJWT = Depends()) -> UserInfoWithTokens:
+    async def login(self, db: AsyncSession, model: UserAuth, Authorize: AuthJWT = Depends()) -> UserInfoWithTokens:
         user = await UsersRepository.get_user_by_email(db=db, email=model.email)
         
         if not user:
@@ -52,7 +52,7 @@ class AuthService:
 
         return UserInfoWithTokens(user = {'_id': user_meta.user_id, 'email': user.email, 'first_name': user.first_name, 'last_name': user.last_name}, accessToken=access_token, refreshToken=refresh_token)
 
-    async def register(self, db: AsyncSession, model: UserCreate, response: Response, Authorize: AuthJWT = Depends()) -> UserInfoWithTokens:
+    async def register(self, db: AsyncSession, model: UserCreate, Authorize: AuthJWT = Depends()) -> UserInfoWithTokens:
         if config.BACKEND_DISABLE_REGISTRATION:
             raise HTTPException(403, "Регистрация отключена")
         user = await UsersRepository.get_user_by_email(db=db, email=model.email)
@@ -75,7 +75,7 @@ class AuthService:
 
         return UserInfoWithTokens(user = {'_id': user_meta.user_id, 'email': user.email, 'first_name': user.first_name, 'last_name': user.last_name}, accessToken=access_token, refreshToken=refresh_token)
 
-    async def refresh(self, model: str, db: AsyncSession, response: Response, Authorize) -> Token:
+    async def refresh(self, model: str, db: AsyncSession, Authorize) -> Token:
         try:
             decoded = jwt.decode(model, base64.b64decode(config.BACKEND_JWT_PUBLIC_KEY).decode('utf-8'), algorithms=['RS256'])
             now = datetime.datetime.now().timestamp()

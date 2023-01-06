@@ -95,4 +95,3 @@ class Config(_Settings):
 @lru_cache()
 def get_config(env_file: str = ".env") -> Config:
     return Config(_env_file=find_dotenv(env_file))
-
